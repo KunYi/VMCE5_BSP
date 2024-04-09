@@ -1,0 +1,237 @@
+Release.txt
+===========
+
+This release.txt file is for the PCnet-Home NDIS 4.0 driver ,PCNTN4M.DLL, for Windows CE. The 
+driver has been tested under the Windows CE 2.1 Version and the Windows CE Platform Builder 
+Version 2.11(OEM version). 
+
+The following notes apply to both the Windows CE 2.1 and the Windows CE 2.11 versions. 
+
+========================================================================================== 
+REQUIREMENTS to build Windows CE driver ( Windows CE version 2.1 and 2.11 ) 
+==========================================================================================
+Microsoft Windows CE 2.1 Enhancement Pack for the Windows CE Embedded Toolkit 
+OR the Windows CE Platform Builder version 2.11. 
+
+===========================================================================================
+INSTRUCTIONS - The following sections are described in detail below- 
+===========================================================================================
+SECTION 1. How To Build the DMA Busmaster Windows CE driver PCNTN4M.DLL for the PCnet 
+           Busmaster Device. 
+
+SECTION 2. Integration of the driver into the Windows CE sample demostration project,MAXALL. 
+           The sample project MAXALL is installed by Windows CE ToolKit.
+           Files that need to be modified in the MAXALL project sample code are mentioned 
+	   in this section. 
+
+===========================================================================================   
+SECTION 1 : HOW TO BUILD the Windows CE driver PCNTN4M.DLL  for PCnet Busmaster Device
+===========================================================================================
+Assumption: The Windows CE 2.1 OR the 2.11 embedded ToolKit is installed in the C:\WINCE 
+	    directory. 
+           
+   Create a directory 'Pcnet' under the existing directory 
+   C:\wince\public\common\oak\drivers\netcard\
+   Place all the source code for the WINCE NDIS driver in the directory
+   C:\wince\public\common\oak\drivers\netcard\pcnet\
+
+   This directory,C:\wince\public\common\oak\drivers\netcard\, was chosen because the NE2000 
+   ETHERNET example source is also under the same directory C:\wince\public\common\oak\drivers\netcard\
+   and building the driver was straight forward.
+   *************************************************************************************************
+   IMPORTANT NOTE - BEFORE YOU BUILD THE DRIVER PLEASE EDIT THE LANCESFT.H FILE(provided with the 
+                    driver source). and CONFIG.BIB file 
+                    MAKE SURE THAT THE VALUES IN CONFIG.BIB FILE CORRESPOND WITH THE VALUES
+		    DEFINED IN LANCESFT.H. PLEASE READ THE FOLLOWING LINES CAREFULLY TO DO THIS. 
+   *************************************************************************************************
+	The changes in LANCESFT.H FILE and CONFIG.BIB files are as follows - 
+	a) Edit the c:\WINCE\Platform\CEPC\Files\Config.bib file  - 
+   	   Add the following line to RESERVE memory for use by our NDIS miniport driver - 
+		PCNETBUF 80170000 00030000 RESERVED 
+	   Please note that the above values is only an example. It is the developers responsibility 
+	   to make sure that the memory range reserved for the PCnet device DOES NOT conflict with 
+	   the memory range reserved by other devices. 
+	b) Edit the Lancesft.h file ( file is provided with Driver source code ). Default value is 
+           as below  - 
+   	   Lancesft.h is the Header file that is provided with the NDIS Driver Source code  
+   	   Edit the values at the end of the file to reflect the values in the config.bib file.
+
+		#define PCNET_DMA_BUFFER_LEN 0x00030000 
+    		#define PCNET_DMA_BUFFER_BASE_PA 0x00170000 
+
+		NOTE: the value 0x00170000 corresponds to the value '80170000' defined in the 
+		Config.bib file.( Note: in Lancesft.h the 80170000 becomes 00170000 - the 8 
+		replaced by 0.).
+    		
+
+   **************************************                  
+   STEPS TO BUILD THE NDIS DRIVER FOLLOW-
+   **************************************     
+   a)Open the X86 DEMO1 MS DOS box by => Start->Programs->WinCE Embedded Development Kit
+                                      ->X86 Minshell
+     To build the RETAIL version of the NDIS driver - set the following environment 
+     variables by typing the following line - 
+		 set WINCEDEBUG=retail   
+   
+   b)  Change to directory C:\wince\public\common\oak\drivers\netcard\pcnet\ 
+     type build -cef ( to build all the files ) 
+     The resulting PCNTN4M.DLL, PCNTN4M.MAP, PCNTN4M.PDB files are placed in the following
+     directory
+     C:\wince\public\common\oak\TARGET\X86\I486\CE\RETAIL\ 
+     
+     After the compilation process copy the PCNTN4M.DLL, PCNTN4M.MAP, PCNTN4M.PDB files 
+     to the directory C:\WINCE\PUBLIC\MAXALL\CESYSGEN\OAK\TARGET\X86\I486\CE\RETAIL - 
+     so that the drivers can be incorporated in the OS during the MAXALL build. 
+     
+==================================================================================
+SECTION 2 :Integration of the driver into the Windows CE sample demo,MAXALL. The sample
+MAXALL is installed by Microsoft Windows CE Embedded ToolKit for Visual C++ 5.0 Preview
+Release 2.10.  
+Files that need to be modified in the MAXALL sample code are mentioned in this section. 
+==================================================================================
+Assumption: The Windows CE 2.1 OR the 2.11 embedded ToolKit is installed in the C:\WINCE 
+	    directory. 
+IMPORTANT NOTE - The Windows CE 2.1 Version DOES NOT WORK with statically allocated IP address.
+                So we use the DHCP server to allocate the IP address. The registry 
+		setting in the file C:\wince\Platform\CEPC\files\Platform.reg has the entry 
+                "EnableDHCP"=dword:1 to enable DHCP. 
+		The Windows CE 2.11 Version WORKS with staticaly allocated as well as with 
+		dynamically allocated IP Address( via the DHCP server) . If you are using the 
+                DHCP server to obtain the IP address follow the intructions below. Otherwise 
+		if you are using the static IP address remove the "EnableDHCP" registry value 
+		and assign the 'IpAddress' and 'Subnetmask' values. These registry keys are 
+                described below. 
+             
+A) In order to compile MAXALL project you should first edit the files as follows - 
+    
+
+   1.1 Edit the file C:\wince\public\MAXALL\cesysgen\oak\files\Common.reg
+      The registry entries for the PCNTN4M.DLL , IP address configuration,
+      IRQ, I/O Base address etc should be added in this file because when the WINCE 
+      OS boots it basically reads the registry files to load drivers, assign IP
+      address to it.
+    
+      Following lines were added to the C:\wince\public\MAXALL\cesysgen\oak\files\Common.reg file
+      in MAXALL sample- 
+
+      ; @CESYSGEN IF CE_MODULES_PCNTN4M
+ 
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M]
+	   "DisplayName"="PCNTN4M Compatible Ethernet Driver"
+	   "Group"="NDIS"
+	   "ImagePath"="pcntn4m.dll"
+
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M\Linkage]
+	   "Route"=multi_sz:"PCNTN4M1"
+
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1]
+	   "DisplayName"="PCNTN4M Compatible Ethernet Driver"
+	   "Group"="NDIS"
+	   "ImagePath"="pcntn4m.dll"
+
+	
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1\Parms]
+	   "BusNumber"=dword:0
+	   ;Bustype=1 is ISA but does not work at this time so changed it to bustype to 5 
+	   "BusType"=dword:05
+	   "Interrupt"=dword:05
+ 	  "IOAddress"=dword:0300
+
+	; @CESYSGEN ENDIF
+
+      1.2) Following lines were added to the C:\wince\Platform\CEPC\files\Platform.reg file. - 
+       
+	;In order to bind the WINCE NDIS driver to TCP/IP the 'bind' keyword is used. 
+	[HKEY_LOCAL_MACHINE\Comm\Tcpip\Linkage] 
+    	  "Bind"=multi_sz:"ppp","PCNTN4M1"
+
+	; Registry values for the pcntn4m1 driver
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1\Parms\TcpIp]
+	   ; This enable the DHCP. In Win CE 2.1 Preview version statically allocated IP address 
+           ; does not work. So we use the DHCP server to allocate the IP address. 
+	   "EnableDHCP"=dword:1
+   	   ; This should be MULTI_SZ
+	   "DefaultGateway"=""
+	   ; This should be SZ... If null it means use LAN, else WAN and Interface.
+	   "LLInterface"=""
+	   ; Use zero for broadcast address? (or 255.255.255.255)
+	   "UseZeroBroadcast"=dword:0
+	   ; Thus should be MULTI_SZ, the IP address list
+	   "IpAddress"="0.0.0.0"
+	   ; This should be MULTI_SZ, the subnet masks for the above IP addresses
+	   "Subnetmask"="0.0.0.0"
+
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M]
+	   "DisplayName"="PCNTN4M Compatible Ethernet Driver"
+	   "Group"="NDIS"
+	   "ImagePath"="pcntn4m.dll"
+
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M\Linkage]
+	   "Route"=multi_sz:"PCNTN4M1"
+
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1]
+	   "DisplayName"="PCNTN4M Compatible Ethernet Driver"
+	   "Group"="NDIS"
+	   "ImagePath"="pcntn4m.dll"
+	
+	[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1\Parms]
+	   "BusNumber"=dword:0
+	   "BusType"=dword:05
+	   "Interrupt"=dword:05
+ 	  "IOAddress"=dword:0300
+         
+
+   2. Edit file C:\wince\public\MAXALL\oak\Misc\Cesysgen.bat 
+      Add the pcntn4m module under the Communication Components Section . 
+      Also add tcpstk ( TCP stack) etc.
+
+      The following lines already exist in the file Cesysgen.bat in MAXALL sample. 
+      The lines have been modified as follows, added pcntn4m ( Busmaster NDIS driver ) 
+      in the Communication component - 
+
+      	REM // Communications components
+      	REM // TCP on PPP & NDIS, IRCOMM on IRDA
+      	set CE_MODULES=%CE_MODULES% device cxport winsock afd netui
+	set CE_MODULES=%CE_MODULES% tcpstk ppp
+	set CE_MODULES=%CE_MODULES% ircomm irdastk
+	set CE_MODULES=%CE_MODULES% ndis arp netdetec elnk3 pcntn4m ne2000 proxim xircce2 dhcp
+
+   3. Edit file C:\Wince\public\common\Cesysgen\Makefile 
+
+      Search for 'ne2000' and add 'pcntn4m' in the same line where 'ne2000' occurs. This allows 
+      the pcntn4m.dll driver to be copied directly during the build process of MAXALL demostration 
+      project. (Otherwise we get an error message). 
+ 
+  
+B) Copy the PCNTN4M.DLL, PCNTN4M.MAP, PCNTN4M.PDB files to the directory
+   C:\WINCE\PUBLIC\MAXALL\CESYSGEN\OAK\LIB\X86\I486\CE\RETAIL - 
+   so that the drivers can be incorporated in the OS during the MAXALL build. 
+
+C) Edit the C:\wince\public\MAXALL\cesysgen\oak\files\Common.bib file to add the WIN CE NDIS driver,
+   PCNTN4M.DLL. 
+   Add the following line in the Common.bib file. 
+    ; @CESYSGEN IF CE_MODULES_PCNTN4M
+   	pcntn4m.dll       $(_FLATRELEASEDIR)\pcntn4m.dll              NK  S
+    ; @CESYSGEN ENDIF
+ 
+   
+D) After the above steps you are ready to build MAXALL PROJECT with the WINCE NDIS driver.
+   --Open the MS DOS box and type the following line which sets the required 
+     environment variables for build of MAXALL sample project- 
+     %_WINCEROOT%\public\common\oak\misc\wince x86 i486 CE MAXALL CEPC
+   -- type the following lines to set the environment variables 
+      set IMGNOETHER=
+      set CEPC_DDI_VGA8BPP=1
+   -- type the following line to build the MAXALL project 
+      %_WINCEROOT%\public\MAXALL\oak\misc\blddemo
+      The resulting binary file, NK.BIN, ( about 4 Mb) is placed in directory C\wince\release
+      directory. 
+
+   The explanations for each of the env variables set are as follows-
+ 
+            set IMGNOETHER=
+   This environment variable IMGNOETHER is not set, indicates that we are using Ethernet. 
+
+            set CEPC_DDI_VGA8BPP=1
+   In order to build a low resolution driver the above varable is set. 
+  

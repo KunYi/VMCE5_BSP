@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  File for localizing platform-specific strings that may be presented to user.
+//
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Platform]
+#define LOC_PLATFORMNAME        "Microsoft CEPC Version 1.0a"
+
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Comm\NE2000]
+#define LOC_DISPLAYNAME_COMM_NE2000     "NE2000 Compatible Ethernet Driver"
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Comm\NE20001]
+#define LOC_DISPLAYNAME_COMM_NE20001    "NE2000 Compatible Ethernet Driver"
+
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial]
+#define LOC_FRIENDLYNAME_SERIAL         "COM1의 직렬 케이블"
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial2]
+#define LOC_FRIENDLYNAME_SERIAL2        "COM2의 직렬 케이블"
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial3]
+#define LOC_FRIENDLYNAME_SERIAL3        "COM3의 직렬 케이블"
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Comm\NscIrda]
+#define LOC_DISPLAYNAME_NSCIRDA         "NSC Fast IrDA Driver"
+
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Parallel]
+#define LOC_FRIENDLYNAME_PARALLEL       "LPT1의 병렬 케이블"
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Comm\DC21140]
+#define LOC_FRIENDLYNAME_COMM_DC21140 	"DC21X4 Ethernet Driver"
+
+//------------------------------------------------------------------------------
+// [HKEY_LOCAL_MACHINE\Comm\DC211401]
+#define LOC_DISPLAYNAME_COMM_DC211401	"DC21X4 Ethernet Driver"
+

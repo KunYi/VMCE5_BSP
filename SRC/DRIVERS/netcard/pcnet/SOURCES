@@ -1,0 +1,37 @@
+!if 0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+!endif
+!if 0
+Use of this source code is subject to the terms of the Microsoft end-user
+license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+If you did not accept the terms of the EULA, you are not authorized to use
+this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+install media.
+!endif
+
+TARGETNAME=PCNTN4M
+CDEFINES=$(C_DEFINES) -DNDIS_MINIPORT_DRIVER -DNDIS40_MINIPORT -DNDIS40_PLUS -DUNDER_CE
+TARGETTYPE=DYNLINK
+RELEASETYPE=PLATFORM
+DLLENTRY=DllEntry
+
+DEFFILE=pcntn4m.def
+
+TARGETLIBS=	$(_COMMONSDKROOT)\lib\$(_CPUINDPATH)\coredll.lib \
+			$(_COMMONOAKROOT)\lib\$(_CPUINDPATH)\ceddk.lib   \
+			$(_COMMONSDKROOT)\lib\$(_CPUINDPATH)\ntcompat.lib \
+			$(_COMMONSDKROOT)\lib\$(_CPUINDPATH)\ndis.lib
+
+#FO=1
+
+SOURCES=alloc.c         \
+	interrup.c      \
+	request.c       \
+	send.c          \
+	lance.c        \
+	wince.c
+
+ 
+!IFDEF FO
+NTTARGETFILE0=pcntn4m.h
+!ENDIF

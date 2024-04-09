@@ -1,0 +1,807 @@
+;
+; Copyright (c) Microsoft Corporation.  All rights reserved.
+;
+;
+; Use of this source code is subject to the terms of the Microsoft end-user
+; license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+; If you did not accept the terms of the EULA, you are not authorized to use
+; this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+; install media.
+;
+
+; Our variables
+#define BUILTIN_ROOT HKEY_LOCAL_MACHINE\Drivers\BuiltIn
+#define PCI_BUS_ROOT $(BUILTIN_ROOT)\PCI
+#define DRIVERS_DIR $(_PUBLICROOT)\common\oak\drivers
+
+; Platform type: 1=DK3, 2=Perp 3=Rose
+[HKEY_LOCAL_MACHINE\Platform]
+   "Name"=LOC_PLATFORMNAME
+   "Type"=dword:2
+   "SoftRTC"=dword:1
+
+
+; @CESYSGEN IF CE_MODULES_DEVICE
+
+; Resources available at time of device.exe initialization.
+; Key names are descriptive; resource ids are definitive.
+; System ids are defined in ddk\inc\resmgr.h.
+; HIVE BOOT SECTION
+[HKEY_LOCAL_MACHINE\Drivers\Resources\IRQ]
+   "Identifier"=dword:1
+   "Minimum"=dword:1
+   "Space"=dword:F
+   "Ranges"="1,3-7,9-0xF"
+   "Shared"="1,3-7,9-0xF"
+
+; I/O ranges are reserved for all drivers listed in this file that are not
+; part of an expansion bus (PCI, PCCARD, etc).  If your platform doesn't
+; have one of these peripherals you may edit this list accordingly.  This
+; sample configuration assumes that, if you have any COM port you have all of
+; the lower-numbered ones as well.
+[HKEY_LOCAL_MACHINE\Drivers\Resources\IO]
+   "Identifier"=dword:2
+   "Minimum"=dword:0
+   "Space"=dword:10000
+
+IF BSP_NOSERIAL
+   "Ranges"="0-0x5F,0x65-0x277,0x284-0x38F,0x392-0x3DF,0x3E2-0xFFFF"
+ENDIF ; BSP_NOSERIAL
+IF BSP_NOSERIAL !
+   "Ranges"="0-0x5F,0x65-0x277,0x284-0x2F7,0x300-0x38F,0x392-0x3DF,0x3E2-0xFFFF"
+ENDIF ; BSP_NOSERIAL !
+IF BSP_SERIAL2
+   "Ranges"="0-0x5F,0x65-0x277,0x284-0x2F7,0x300-0x38F,0x392-0x3DF,0x3E2-0x3E7,0x3F0-0xFFFF"
+ENDIF ; BSP_SERIAL2
+IF BSP_SERIAL3
+   "Ranges"="0-0x5F,0x65-0x277,0x284-0x2E7,0x2F0-0x2F7,0x300-0x38F,0x392-0x3DF,0x3E2-0x3E7,0x3F0-0xFFFF"
+ENDIF ; BSP_SERIAL3
+
+
+; END HIVE BOOT SECTION
+
+; ---------------------------- BEGIN PCI DEVICES ----------------------------
+; @CESYSGEN IF CE_MODULES_PCI
+IF BSP_NOPCIBUS !   
+; HIVE BOOT SECTION
+
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI]
+    "NoConfig"=dword:0
+    "MemBase"=dword:80000000	
+    "MemLen" =dword:78000000
+    "IoBase"=dword:A000
+    "IoLen" =dword:6000
+
+#include "$(DRIVERS_DIR)\pcibus\pcibus.reg"
+
+; END HIVE BOOT SECTION
+
+;
+; *************************
+;   NDIS miniport drivers
+; *************************
+;
+; @CESYSGEN IF CE_MODULES_NDIS
+IF BSP_NOETHER !
+
+
+ENDIF BSP_NOETHER !
+; @CESYSGEN ENDIF CE_MODULES_NDIS
+
+;Because the BIOS configure the PCI-PCI bridge and it is different from how we configured.
+;So we can not touch the window. Set NoConfig to all PCI to PCI Bridge to indicate PCiBus do
+;not configure PCI-PCI bridge window.
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI\Template\PCI-PCI-BRIDGE]
+   "Class"=dword:06
+   "SubClass"=dword:04
+   "NoConfig"=dword:1
+
+; @CESYSGEN IF CE_MODULES_PCCARD
+IF BSP_NOPCCARD !
+IF BSP_PCCARD_I82365
+#include "$(DRIVERS_DIR)\pccard\i82365\pcc_i82365.reg"
+ENDIF BSP_PCCARD_I82365
+IF BSP_PCCARD_TIPCCARD
+#include "$(DRIVERS_DIR)\pccard\tipccard\pcc_tipccard.reg"
+ENDIF BSP_PCCARD_TIPCCARD
+#include "$(DRIVERS_DIR)\pccard\mdd\pcc_serv.reg"
+[HKEY_LOCAL_MACHINE\Drivers\PCCARD\PCMCIA\TEMPLATE\PCMCIA]
+   "Dll"="pcmcia.dll"
+   "NoConfig"=dword:1
+   "IClass"=multi_sz:"{6BEAB08A-8914-42fd-B33F-61968B9AAB32}=PCMCIA Card Services"
+ENDIF BSP_NOPCCARD !
+; @CESYSGEN ENDIF CE_MODULES_PCCARD
+
+; @CESYSGEN IF CE_MODULES_NDIS
+IF BSP_NOETHER !
+
+; @CESYSGEN IF CE_MODULES_SISNIC
+IF BSP_NIC_SISNIC_PCI
+; These are the registry settings for using the SIS900 Fast Ethernet
+; adapter on a CEPC. "BusType=5" => PCI, InterruptNumber and IoBaseAddress
+; were obtained by running a PCI device enumerator program.
+; These setting will conflict with those for PCCARD SISNIC in that multiply
+; instanced comm settings are not yet supported (i.e. SISNIC1, SISNIC2 ...)
+[HKEY_LOCAL_MACHINE\Comm\SISNIC]
+   "DisplayName"=LOC_DISPLAYNAME_COMM_SISNIC
+   "Group"="NDIS"
+   "ImagePath"="sisnic.dll"
+
+;
+; Template the PCI bus driver uses to match a SIS900 Adapter
+;
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI\Template\SISNIC]
+   "Dll"="NDIS.dll"
+   "Class"=dword:02
+   "SubClass"=dword:00
+   "ProgIF"=dword:0
+   "VendorID"=multi_sz:"1039"
+   "DeviceID"=multi_sz:"0900"
+   "Entry"="NdisPCIBusDeviceInit"
+   "Transceiver"=dword:3
+   "CardType"=dword:1
+   "IsrDll"="giisr.dll"
+   "IsrHandler"="ISRHandler"
+   "PortIsIO"=dword:1
+   "PortOffset"=dword:18
+   "PortSize"=dword:4
+   "PortMask"=dword:ffffffff
+
+ENDIF BSP_NIC_SISNIC_PCI
+; @CESYSGEN ENDIF CE_MODULES_SISNIC
+
+ENDIF BSP_NOETHER !
+; @CESYSGEN ENDIF CE_MODULES_NDIS
+
+
+; @CESYSGEN IF CE_MODULES_WAVEAPI
+IF BSP_NOAUDIO !
+IF BSP_WAVEDEV_ES1371
+#include "$(DRIVERS_DIR)\wavedev\pdd\es1371\es1371.reg"
+ENDIF BSP_WAVEDEV_ES1371
+
+IF BSP_WAVEDEV_ENSONIQ
+#include "$(DRIVERS_DIR)\wavedev\unified\ensoniq\ensoniq.reg"
+ENDIF BSP_WAVEDEV_ENSONIQ
+
+ENDIF BSP_NOAUDIO !
+; @CESYSGEN ENDIF CE_MODULES_WAVEAPI
+
+
+; @CESYSGEN IF CE_MODULES_CEWDMMGR
+; @CESYSGEN IF CE_MODULES_1394OHCD
+IF BSP_NO1394 !
+#include "$(DRIVERS_DIR)\1394\1394.reg"
+ENDIF BSP_NO1394 !
+; @CESYSGEN ENDIF CE_MODULES_1394OHCD
+; @CESYSGEN ENDIF CE_MODULES_CEWDMMGR
+
+; @CESYSGEN IF CE_MODULES_USBD
+IF BSP_NOUSB !
+IF BSP_USB_OHCI
+#include "$(DRIVERS_DIR)\usb\hcd\ohc\ohci.reg"
+ENDIF
+
+IF BSP_USB_UHCI
+#include "$(DRIVERS_DIR)\usb\hcd\uhc\uhci.reg"
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI\Template\UHCI]
+    "HcdCapability"=dword:2      ;HCD_SUSPEND_ON_REQUEST|HCD_SUSPEND_RESUME
+ENDIF BSP_USB_UHCI
+
+IF BSP_USB_EHCI
+#include "$(DRIVERS_DIR)\usb\hcd\usb20\ehcipdd\ehcd.reg"
+ENDIF
+
+ENDIF BSP_NOUSB !
+; @CESYSGEN ENDIF CE_MODULES_USBD
+
+
+; @CESYSGEN IF CE_MODULES_ATAPI
+; HIVE BOOT SECTION
+IF BSP_NOIDE !
+
+; @CESYSGEN IF ATAPI_ATAPI_PCIO_CD
+[$(PCI_BUS_ROOT)\Template\GenericIDE]
+   "SpawnFunction"="CreatePCIHDCD" ; controller-specific instantiation function (hard disk + CD/DVD)
+; @CESYSGEN ELSE
+[$(PCI_BUS_ROOT)\Template\GenericIDE]
+   "SpawnFunction"="CreatePCIHD"   ; controller-specific instantiation function (hard disk only)
+; @CESYSGEN ENDIF ATAPI_ATAPI_PCIO_CD
+
+; @CESYSGEN IF ATAPI_ATAPI_PCIO
+#include "$(DRIVERS_DIR)\block\atapi\genericide.reg"
+[$(PCI_BUS_ROOT)\Template\GenericIDE\Device0]
+   "DMA"=dword:02                  ; 0 = disable DMA, 1 = enable DMA, 2 = enable DMA for ATA only (not for CD/DVD)
+[$(PCI_BUS_ROOT)\Template\GenericIDE\Device1]
+   "DMA"=dword:02                  ; 0 = disable DMA, 1 = enable DMA, 2 = enable DMA for ATA only (not for CD/DVD)
+[$(PCI_BUS_ROOT)\Template\GenericIDE\Device2]
+   "DMA"=dword:02                  ; 0 = disable DMA, 1 = enable DMA, 2 = enable DMA for ATA only (not for CD/DVD)
+[$(PCI_BUS_ROOT)\Template\GenericIDE\Device3]
+   "DMA"=dword:02                  ; 0 = disable DMA, 1 = enable DMA, 2 = enable DMA for ATA only (not for CD/DVD)
+; @CESYSGEN ENDIF ATAPI_ATAPI_PCIO
+
+ENDIF BSP_NOIDE !
+; END HIVE BOOT SECTION
+; @CESYSGEN ENDIF CE_MODULES_ATAPI
+
+; @CESYSGEN IF CE_MODULES_SDNPCID
+; HIVE BOOT SECTION
+#include "$(DRIVERS_DIR)\block\msflashfmd\sdnpci\sdnpcid\sdnpcid.reg"
+; END HIVE BOOT SECTION
+; @CESYSGEN ENDIF CE_MODULES_SDNPCID
+
+; @CESYSGEN IF CE_MODULES_SDNPCID_IMGUPD
+; HIVE BOOT SECTION
+#include "$(DRIVERS_DIR)\block\msflashfmd2\sdnpci\sdnpcid\sdnpcid.reg"
+; END HIVE BOOT SECTION
+; @CESYSGEN ENDIF CE_MODULES_SDNPCID_IMGUPD
+
+; @CESYSGEN IF CE_MODULES_ENUMFASLPCI
+; HIVE BOOT SECTION
+#include "$(DRIVERS_DIR)\block\msflashfmd\fasl\enumfaslpci\enumfaslpci.reg"
+; END HIVE BOOT SECTION
+; @CESYSGEN ENDIF CE_MODULES_ENUMFASLPCI
+
+; @CESYSGEN ENDIF CE_MODULES_PCI
+
+
+; @CESYSGEN IF CE_MODULES_DISPLAY
+
+IF BSP_NODISPLAY !
+
+IF BSP_DISPLAY_SMI3DR
+
+; @CESYSGEN IF CE_MODULES_PCI
+
+; GWES will be able to auto-detect the display adapter if a candidate value 
+; points to the adapter's PCI instance.  Values from Candidate1 to Candidate32
+; (decimal) are possible; GWES will examine them sequentially until it finds
+; a match.
+[HKEY_LOCAL_MACHINE\System\GDI\DisplayCandidates]
+	"Candidate1"="Drivers\\BuiltIn\\PCI\\Instance\\SMI3DR"
+
+#include "$(DRIVERS_DIR)\display\smi3dr\smi3dr.reg"
+
+; @CESYSGEN ENDIF CE_MODULES_PCI
+
+ENDIF ; BSP_DISPLAY_SMI3DR
+
+IF BSP_DISPLAY_RAGEXL
+
+; @CESYSGEN IF CE_MODULES_PCI
+
+; GWES will be able to auto-detect the display adapter if a candidate value 
+; points to the adapter's PCI instance.  Values from Candidate1 to Candidate32
+; (decimal) are possible; GWES will examine them sequentially until it finds
+; a match.
+[HKEY_LOCAL_MACHINE\System\GDI\DisplayCandidates]
+	"Candidate2"="Drivers\\BuiltIn\\PCI\\Instance\\RageXL"
+
+#include "$(DRIVERS_DIR)\display\ragexl\ragexl.reg"
+
+; @CESYSGEN ENDIF CE_MODULES_PCI
+
+ENDIF ; BSP_DISPLAY_RAGEXL
+
+IF BSP_DISPLAY_MQ200
+
+; @CESYSGEN IF CE_MODULES_PCI
+
+; GWES will be able to auto-detect the display adapter if a candidate value 
+; points to the adapter's PCI instance.  Values from Candidate1 to Candidate32
+; (decimal) are possible; GWES will examine them sequentially until it finds
+; a match.
+[HKEY_LOCAL_MACHINE\System\GDI\DisplayCandidates]
+	"Candidate5"="Drivers\\BuiltIn\\PCI\\Instance\\MQ200"
+
+#include "$(DRIVERS_DIR)\display\mq200\mq200.reg"
+
+; @CESYSGEN ENDIF CE_MODULES_PCI
+
+ENDIF ; BSP_DISPLAY_MQ200
+
+ENDIF BSP_NODISPLAY !
+
+; @CESYSGEN ENDIF CE_MODULES_DISPLAY
+
+ENDIF BSP_NOPCIBUS !
+; ---------------------------- END PCI DEVICES ------------------------------
+
+
+; Example settings for configuring this platform as an Internet Connection
+; Sharing device.  
+; @CESYSGEN IF CE_MODULES_IPNAT
+IF BSP_ICS
+
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "EnableAddressTranslation"=dword:1
+   "EnableDhcpAllocator"=dword:1
+   "EnableDnsProxy"=dword:1
+; @CESYSGEN IF !CE_MODULES_FW6
+   "EnablePacketFiltering"=dword:1
+; @CESYSGEN ENDIF
+
+; @CESYSGEN IF CE_MODULES_PPP
+;
+; Configure the RAS server to allocate client addresses
+; in the same subnet as the PrivateInterface of NAT/ICS.
+; If the IpAddress or Subnetmask of the private interface
+; above is changed from 192.168.0.XXX, then
+; the AutoIPSubnet and AutoIPSubnetmaks for the PPP server
+; must be changed correspondingly.
+;
+; Note that if RAS clients are to be placed on the public side
+; of the NAT, then the PPP server should instead be configured
+; to allocate addresses in  a manner corresponding to the ICS
+; public interface.
+;
+[HKEY_LOCAL_MACHINE\Comm\PPP\Server\Parms]
+  "AutoIPSubnet"=dword:C0A80000
+  "AutoIPSubnetMask"=dword:FFFFFF00
+; @CESYSGEN ENDIF CE_MODULES_PPP
+
+; @CESYSGEN IF CE_MODULES_MBRIDGE
+IF BSP_ICS_BRIDGE_PRIVATE
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PrivateInterface"="MBRIDGE1"
+
+[HKEY_LOCAL_MACHINE\Comm\MBRIDGE1\Parms\TcpIp]
+   "EnableDHCP"=dword:0
+   "DefaultGateway"=""
+   "UseZeroBroadcast"=dword:0
+   "IpAddress"="192.168.0.1"
+   "Subnetmask"="255.255.255.0"
+
+; @CESYSGEN IF SERVERS_MODULES_WEBPROXY
+; DHCP Scope option for proxy auto-discovery
+[HKEY_LOCAL_MACHINE\Comm\MBRIDGE1\DhcpAllocator\DhcpOptions]
+   "252"=hex:68,74,74,70,3a,2f,2f,31,39,32,2e,31,36,38,2e,30,2e,31,3a,38,30,38,30,2f,70,72,6f,78,79,2e,70,61,63,00 
+; @CESYSGEN ENDIF SERVERS_MODULES_WEBPROXY
+
+; @CESYSGEN IF CE_MODULES_NWIFI
+[HKEY_LOCAL_MACHINE\Comm\RTL8180_NWIFI\Parms]
+    "ProtocolsToBindTo"=multi_sz:"MBRIDGE"
+; @CESYSGEN ENDIF
+
+ENDIF BSP_ICS_BRIDGE_PRIVATE
+; @CESYSGEN ENDIF
+
+; @CESYSGEN IF CE_MODULES_NE2000
+
+IF BSP_NIC_NE2000_PCI
+
+IF BSP_ICS_BRIDGE_PRIVATE
+; @CESYSGEN IF CE_MODULES_NWIFI
+[HKEY_LOCAL_MACHINE\Comm\MBridge]
+    "Bind"=multi_sz:"PCI\\NE20001","RTL8180_NWIFI"
+; @CESYSGEN ENDIF
+
+; @CESYSGEN IF !CE_MODULES_NWIFI
+[HKEY_LOCAL_MACHINE\Comm\MBridge]
+    "Bind"=multi_sz:"PCI\\NE20001"
+; @CESYSGEN ENDIF
+
+[HKEY_LOCAL_MACHINE\Comm\PCI\NE20001\Parms]
+    "ProtocolsToBindTo"=multi_sz:"MBRIDGE"
+
+ENDIF BSP_ICS_BRIDGE_PRIVATE
+
+IF BSP_ICS_BRIDGE_PRIVATE !
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PrivateInterface"="PCI\\NE20001"
+   
+[HKEY_LOCAL_MACHINE\Comm\PCI\NE20001\Parms\TcpIp]
+   "EnableDHCP"=dword:0
+   "DefaultGateway"=""
+   "UseZeroBroadcast"=dword:0
+   "IpAddress"="192.168.0.1"
+   "Subnetmask"="255.255.255.0"
+
+; @CESYSGEN IF SERVERS_MODULES_WEBPROXY
+; DHCP Scope option for proxy auto-discovery
+[HKEY_LOCAL_MACHINE\Comm\PCI\NE20001\DhcpAllocator\DhcpOptions]
+   "252"=hex:68,74,74,70,3a,2f,2f,31,39,32,2e,31,36,38,2e,30,2e,31,3a,38,30,38,30,2f,70,72,6f,78,79,2e,70,61,63,00 
+; @CESYSGEN ENDIF SERVERS_MODULES_WEBPROXY
+ENDIF BSP_ICS_BRIDGE_PRIVATE !
+ENDIF BSP_NIC_NE2000_PCI
+
+IF BSP_NIC_NE20002_PCI
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PublicInterface"="PCI\\NE20002"
+; @CESYSGEN IF SERVERS_MODULES_UPNPSVC
+; Prevent UPnP from running on public interface
+[HKEY_LOCAL_MACHINE\COMM\UPnP\Exclude]
+   "PCI\\NE20002"=dword:1
+; @CESYSGEN ENDIF SERVERS_MODULES_UPNPSVC
+
+ENDIF BSP_NIC_NE20002_PCI
+; @CESYSGEN ENDIF CE_MODULES_NE2000
+
+; @CESYSGEN IF CE_MODULES_RTL8139
+
+IF BSP_NIC_RTL8139
+
+IF BSP_ICS_BRIDGE_PRIVATE
+; @CESYSGEN IF CE_MODULES_NWIFI
+[HKEY_LOCAL_MACHINE\Comm\MBridge]
+    "Bind"=multi_sz:"PCI\\RTL81391","RTL8180_NWIFI"
+; @CESYSGEN ENDIF
+
+; @CESYSGEN IF !CE_MODULES_NWIFI
+[HKEY_LOCAL_MACHINE\Comm\MBridge]
+    "Bind"=multi_sz:"PCI\\RTL81391"
+; @CESYSGEN ENDIF
+
+[HKEY_LOCAL_MACHINE\Comm\PCI\RTL81391\Parms]
+    "ProtocolsToBindTo"=multi_sz:"MBRIDGE"
+
+ENDIF BSP_ICS_BRIDGE_PRIVATE
+
+IF BSP_ICS_BRIDGE_PRIVATE !
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PrivateInterface"="PCI\\RTL81391"
+   
+[HKEY_LOCAL_MACHINE\Comm\PCI\RTL81391\Parms\TcpIp]
+   "EnableDHCP"=dword:0
+   "DefaultGateway"=""
+   "UseZeroBroadcast"=dword:0
+   "IpAddress"="192.168.0.1"
+   "Subnetmask"="255.255.255.0"
+
+; @CESYSGEN IF SERVERS_MODULES_WEBPROXY
+; DHCP Scope option for proxy auto-discovery
+[HKEY_LOCAL_MACHINE\Comm\PCI\RTL81391\DhcpAllocator\DhcpOptions]
+   "252"=hex:68,74,74,70,3a,2f,2f,31,39,32,2e,31,36,38,2e,30,2e,31,3a,38,30,38,30,2f,70,72,6f,78,79,2e,70,61,63,00
+; @CESYSGEN ENDIF SERVERS_MODULES_WEBPROXY
+
+ENDIF BSP_ICS_BRIDGE_PRIVATE !
+
+IF BSP_NIC_XNET2
+; @CESYSGEN IF CE_MODULES_MBRIDGE2
+; @CESYSGEN IF SERVERS_MODULES_XMINI
+[HKEY_LOCAL_MACHINE\Comm\MBridge2]
+    "Bind"=multi_sz:"PCI\\RTL81392","XMINI1"
+
+[HKEY_LOCAL_MACHINE\Comm\PCI\RTL81392\Parms]
+    "ProtocolsToBindTo"=multi_sz:"MBRIDGE2"
+
+; @CESYSGEN ENDIF SERVERS_MODULES_XMINI
+; @CESYSGEN ENDIF CE_MODULES_MBRIDGE2
+ENDIF BSP_NIC_XNET2
+
+ENDIF BSP_NIC_RTL8139
+
+IF BSP_NIC_RTL81392
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PublicInterface"="PCI\\RTL81392"
+; @CESYSGEN IF SERVERS_MODULES_UPNPSVC
+; Prevent UPnP from running on public interface
+[HKEY_LOCAL_MACHINE\COMM\UPnP\Exclude]
+   "PCI\\RTL81392"=dword:1
+; @CESYSGEN ENDIF SERVERS_MODULES_UPNPSVC
+
+IF BSP_NIC_XNET3
+; @CESYSGEN IF CE_MODULES_MBRIDGE2
+; @CESYSGEN IF SERVERS_MODULES_XMINI
+[HKEY_LOCAL_MACHINE\Comm\MBridge2]
+    "Bind"=multi_sz:"PCI\\RTL81393","XMINI1"
+
+[HKEY_LOCAL_MACHINE\Comm\PCI\RTL81393\Parms]
+    "ProtocolsToBindTo"=multi_sz:"MBRIDGE2"
+
+; @CESYSGEN ENDIF SERVERS_MODULES_XMINI
+; @CESYSGEN ENDIF CE_MODULES_MBRIDGE2
+ENDIF BSP_NIC_XNET3
+
+ENDIF BSP_NIC_RTL81392 
+
+
+; @CESYSGEN ENDIF CE_MODULES_RTL8139
+
+IF BSP_ICS_PUBLIC_VMINI
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PublicInterface"="VMINI1"
+; @CESYSGEN IF SERVERS_MODULES_UPNPSVC
+; Prevent UPnP from running on public interface
+[HKEY_LOCAL_MACHINE\COMM\UPnP\Exclude]
+   "VMINI1"=dword:1
+; @CESYSGEN ENDIF SERVERS_MODULES_UPNPSVC
+   ;; Adapter settings are in common.reg
+ENDIF BSP_ICS_PUBLIC_VMINI
+
+ENDIF BSP_ICS
+; @CESYSGEN ENDIF CE_MODULES_IPNAT
+
+
+; @CESYSGEN IF CE_MODULES_NDIS
+IF BSP_NOETHER !
+
+; @CESYSGEN IF CE_MODULES_NE2000
+IF BSP_NIC_NE2000_ISA
+; These are the registry settings for using the Linksys ISA NE2000 ethernet
+; adapter on a CEPC. "BusType=1" => ISA, InterruptNumber and IoBaseAddress
+; a Linksys setup utility.
+; These setting will conflict with those for PCCARD NE2000 in that multiply
+; instanced comm settings are not yet supported (i.e. NE20001, NE20002 ...)
+[HKEY_LOCAL_MACHINE\Comm\NE2000]
+   "DisplayName"=LOC_DISPLAYNAME_COMM_NE2000
+   "Group"="NDIS"
+   "ImagePath"="ne2000.dll"
+
+[HKEY_LOCAL_MACHINE\Comm\NE2000\Linkage]
+   "Route"=multi_sz:"NE20001"
+
+[HKEY_LOCAL_MACHINE\Comm\NE20001]
+   "DisplayName"=LOC_DISPLAYNAME_COMM_NE20001
+   "Group"="NDIS"
+   "ImagePath"="ne2000.dll"
+
+[HKEY_LOCAL_MACHINE\Comm\NE20001\Parms]
+   "BusNumber"=dword:0
+   "BusType"=dword:1
+   "InterruptNumber"=dword:0f
+   "IoBaseAddress"=dword:300
+   "Transceiver"=dword:3
+   "Sysintr"=dword:1f	; <-- This assumes the adapter will use IRQ 15.
+                        ;     On CEPC this will be SYSINTR_FIRMWARE + IRQ
+
+ENDIF BSP_NIC_NE2000_ISA
+; @CESYSGEN ENDIF CE_MODULES_NE2000
+
+ENDIF BSP_NOETHER !
+; @CESYSGEN ENDIF CE_MODULES_NDIS
+
+
+; @CESYSGEN IF CE_MODULES_SERIAL
+IF BSP_NOSERIAL !
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial]
+   "SysIntr"=dword:13
+   "IoBase"=dword:02F8
+   "IoLen"=dword:8
+   "DeviceArrayIndex"=dword:0
+   "Prefix"="COM"
+   "IClass"="{CC5195AC-BA49-48a0-BE17-DF6D1B0173DD}"
+   "Dll"="Com16550.Dll"
+   "Order"=dword:0
+   "Priority"=dword:0
+; Turn on follows for Installable ISR (isr16550 supporting SOFTWARE FIFO
+;   "Irq"=dword:3
+;   "IsrDll"="isr16550.dll"
+;   "IsrHandler"="ISRHandler"
+
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial\Unimodem]
+   "Tsp"="Unimodem.dll"
+   "DeviceType"=dword:0
+   "FriendlyName"=LOC_FRIENDLYNAME_SERIAL
+   "DevConfig"=hex: 10,00, 00,00, 05,00,00,00, 10,01,00,00, 00,4B,00,00, 00,00, 08, 00, 00, 00,00,00,00
+ENDIF BSP_NOSERIAL !
+
+IF BSP_SERIAL2
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial2]
+   "SysIntr"=dword:14
+   "IoBase"=dword:03E8
+   "IoLen"=dword:8
+   "DeviceArrayIndex"=dword:1
+   "Prefix"="COM"
+   "IClass"="{CC5195AC-BA49-48a0-BE17-DF6D1B0173DD}"
+   "Dll"="Com16550.Dll"
+   "Order"=dword:0
+
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial2\Unimodem]
+   "Tsp"="Unimodem.dll"
+   "DeviceType"=dword:0
+   "FriendlyName"=LOC_FRIENDLYNAME_SERIAL2
+   "DevConfig"=hex: 10,00, 00,00, 05,00,00,00, 10,01,00,00, 00,4B,00,00, 00,00, 08, 00, 00, 00,00,00,00
+ENDIF BSP_SERIAL2
+
+IF BSP_SERIAL3
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial3]
+   "SysIntr"=dword:15
+   "IoBase"=dword:02E8
+   "IoLen"=dword:8
+   "DeviceArrayIndex"=dword:2
+   "Prefix"="COM"
+   "IClass"="{CC5195AC-BA49-48a0-BE17-DF6D1B0173DD}"
+   "Dll"="Com16550.Dll"
+   "Order"=dword:0
+
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Serial3\Unimodem]
+   "Tsp"="Unimodem.dll"
+   "DeviceType"=dword:0
+   "FriendlyName"=LOC_FRIENDLYNAME_SERIAL3
+   "DevConfig"=hex: 10,00, 00,00, 05,00,00,00, 10,01,00,00, 00,4B,00,00, 00,00, 08, 00, 00, 00,00,00,00
+ENDIF BSP_SERIAL3
+
+; @CESYSGEN ENDIF CE_MODULES_SERIAL
+
+
+; @CESYSGEN IF CE_MODULES_IRDASTK
+IF BSP_NOSIR !
+IF BSP_NOFIR
+[HKEY_LOCAL_MACHINE\Comm\IrDA\Linkage]
+    "Bind"=multi_sz:"Irsir1"
+    
+[HKEY_LOCAL_MACHINE\Comm\Irsir]
+   "DisplayName"=LOC_DISPLAYNAME_IRSIR
+   "Group"="NDIS"
+   "ImagePath"="irsir.dll"
+
+[HKEY_LOCAL_MACHINE\Comm\Irsir\Linkage]
+   "Route"=multi_sz:"Irsir1"
+
+[HKEY_LOCAL_MACHINE\Comm\Irsir1\Parms]
+   "BusNumber"=dword:0
+   "BusType"=dword:0
+   "Port"=dword:1
+   ; 0 = Use external dongle, 1 = Use internal IR
+   "IntIR"=dword:0
+   ; 0 - internal transceiver, 1 - Extended Systems JetEye dongle.
+   "TransceiverType"=dword:1
+   "DisablePowerManagement"=dword:1
+ENDIF BSP_NOFIR
+ENDIF BSP_NOSIR !
+; @CESYSGEN ENDIF CE_MODULES_IRDASTK
+
+
+; @CESYSGEN IF CE_MODULES_PARALLEL
+IF BSP_NOPARALLEL !
+; Parallel Port Driver
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\Parallel]
+   "DeviceArrayIndex"=dword:0
+   "Prefix"="LPT"
+   "Dll"="Parallel.Dll"
+   "Order"=dword:0
+   "IoBase"=dword:378
+   "IoLen"=dword:C
+   "SysIntr"=dword:17	; SYSINTR_FIRMWARE + irq (IRQ5 for LPT2, IRQ7 for LPT1)
+   "DeviceType"=dword:0
+   "FriendlyName"=LOC_FRIENDLYNAME_PARALLEL
+   "DevConfig"=hex: 10,00, 00,00, 05,00,00,00, 10,01,00,00, 00,4B,00,00, 00,00, 08, 00, 00, 00,00,00,00
+   "IClass"="{4FE1CEF1-E765-4a1e-B503-5B8C674D7C68}"
+ENDIF BSP_NOPARALLEL !
+; @CESYSGEN ENDIF CE_MODULES_PARALLEL
+
+
+; @CESYSGEN IF CE_MODULES_POINTER
+IF BSP_NOTOUCH !
+[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\TOUCH]
+    "DriverName"="keybddr.dll"
+ENDIF BSP_NOTOUCH !
+; @CESYSGEN ENDIF CE_MODULES_POINTER
+
+
+; @CESYSGEN IF CE_MODULES_POINTER
+IF BSP_NOMOUSE !
+#include "$(DRIVERS_DIR)\keybd\ps2_8042\8042mouse.reg"
+ENDIF BSP_NOMOUSE !
+; @CESYSGEN ENDIF CE_MODULES_POINTER
+
+; @CESYSGEN IF CE_MODULES_KEYBD
+IF BSP_NOKEYBD !
+#include "$(DRIVERS_DIR)\keybd\keybd.reg"
+#include "$(DRIVERS_DIR)\keybd\ps2_8042\8042keybd.reg"
+
+#include "$(DRIVERS_DIR)\keybd\LayMgr.reg"
+
+ENDIF BSP_NOKEYBD !
+; @CESYSGEN ENDIF CE_MODULES_KEYBD
+
+; @CESYSGEN IF CE_MODULES_BATTDRVR
+
+#include "$(DRIVERS_DIR)\battdrvr\battdrvr.reg"
+
+; @CESYSGEN ENDIF CE_MODULES_BATTDRVR
+
+; @CESYSGEN IF CE_MODULES_NLEDDRVR
+
+#include "$(DRIVERS_DIR)\nleddrvr\nleddrvr.reg"
+
+; @CESYSGEN ENDIF CE_MODULES_NLEDDRVR
+
+; @CESYSGEN ENDIF CE_MODULES_DEVICE
+
+
+; @CESYSGEN IF CE_MODULES_COMMCTRL
+;************************************
+; Common control settings
+;************************************
+;; Turns on hover tooltips (and off click tooltips)
+[HKEY_LOCAL_MACHINE\SYSTEM\GWE\Commctrl]
+   "ToolTipsHold"=dword:0
+; @CESYSGEN ENDIF CE_MODULES_COMMCTRL
+
+
+; @CESYSGEN IF WCESHELLFE_MODULES_CTLPNL
+; This registry setting controls the checkboxes displayed in the Sounds CPL
+; under "enable clicks & taps". Set bit0 if you have a keyboard, set bit1 if
+; you have a touch screen. Set bit2 if you have HW buttons (NOTE: for now
+; HW buttons are mutually exclusive with the keyboard)
+[HKEY_LOCAL_MACHINE\ControlPanel]
+    "InputConfig"=dword:1   ; 1 => keybd, but no touch screen
+; @CESYSGEN ENDIF WCESHELLFE_MODULES_CTLPNL
+
+
+; @CESYSGEN IF WCESHELLFE_MODULES_EXPLORER
+; This registry setting controls display of the Explorer's suspend menu button
+[HKEY_LOCAL_MACHINE\Explorer]
+    "Suspend"=dword:1
+; @CESYSGEN ENDIF WCESHELLFE_MODULES_EXPLORER
+
+; ----------------------------------------------------------------------------
+; Select a Direct3D Mobile Driver
+
+; @CESYSGEN IF DIRECTX_MODULES_D3DM
+IF BSP_D3DM_NULL
+IF BSP_D3DM_NULL_REMOTE
+[HKEY_LOCAL_MACHINE\System\D3DM\Drivers]
+   "RemoteHook"="d3dm_nulldrv.dll"
+ELSE
+[HKEY_LOCAL_MACHINE\System\D3DM\Drivers]
+   "LocalHook"="d3dm_nulldrv.dll"
+ENDIF BSP_D3DM_NULL_REMOTE
+ENDIF BSP_D3DM_NULL
+; @CESYSGEN ENDIF DIRECTX_MODULES_D3DM
+
+; ----------------------------------------------------------------------------
+
+; @CESYSGEN IF CE_MODULES_RAMDISK
+; @CESYSGEN IF CE_MODULES_BINFS
+; HIVE BOOT SECTION
+IF IMGFLASH !
+[HKEY_LOCAL_MACHINE\Drivers\BlockDevice\RAMDisk]
+    "Address"=dword:80220000
+    "Size"=dword:FFFFFFFF
+ENDIF IMGFLASH !
+; END HIVE BOOT SECTION
+; @CESYSGEN ENDIF
+; @CESYSGEN ENDIF
+
+
+; @CESYSGEN IF CE_MODULES_USBDISK6
+[HKEY_LOCAL_MACHINE\System\StorageManager\Profiles\USBHDProfile]
+    "Folder"="USB Disk"
+; @CESYSGEN ENDIF CE_MODULES_USBDISK6
+
+;
+
+;----------------------------------------------------------------------
+#include "$(_TARGETPLATROOT)\SRC\DRIVERS\netcard\pcnet\pcnet.reg"
+;----------------------------------------------------------------------
+
+; @CESYSGEN IF FILESYS_FSREGHIVE
+; HIVE BOOT SECTION
+
+; Valid Bits for Flags registry value
+; If no flags are set, the hive will be stored in the object store.
+;
+; 0x00000001    Start storage manager in boot phase 1 for hive-based registry
+; 0x00000002    Start device manager in boot phase 1 for hive-based registry
+; 0x00000004    Start storage manager in boot phase 1 for registry in
+;               external ROM (such as BINFS)
+; 0x00000008    Start device manager in boot phase 1 for registry in
+;               external ROM (such as BINFS)
+
+[HKEY_LOCAL_MACHINE\init\BootVars]
+	"SystemHive"="system.hv"
+	"Start DevMgr"=dword:1
+	"Flags"=dword:1
+    "RegistryFlags"=dword:1
+;	"NoDefaultUser"=dword:1
+
+; END HIVE BOOT SECTION
+; @CESYSGEN ENDIF FILESYS_FSREGHIVE
+
+; HIVE BOOT SECTION
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI]
+;    "Flags"=dword:1008
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI\Template\GenericIDE]
+ ;   "Flags"=dword:1000
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI\Template\GenericIDE\Device0]
+ ;   "Flags"=dword:1000
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn]
+ ;   "Flags"=dword:1008
+[HKEY_LOCAL_MACHINE\System\StorageManager]
+ ;   "Flags"=dword:1000
+[HKEY_LOCAL_MACHINE\System\StorageManager\Profiles\HDProfile\FATFS]
+    "MountFlags"=dword:2
+; END HIVE BOOT SECTION

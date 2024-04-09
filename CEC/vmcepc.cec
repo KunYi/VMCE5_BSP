@@ -1,0 +1,108 @@
+CECInfo
+(
+	Name ( "VMCEPC" )
+	CECVersion ( 5.00 )
+	Description ( "A BSP for a Windows CE PC-based hardware reference platform.  The platform uses the OS based on the x86 architecture emulated by VMWARE." )
+	GUID ( {61748891-964E-4D9F-9360-8D15E39963B9} )
+	Vendor ( "Sting FENG" )
+)
+ComponentType
+(
+	Name ( "BSPs" )
+	GUID ( {3CABD6DA-B577-4A87-9490-9432E80DC2F1} )
+	Description ( "Board Support Packages" )
+	MaxResolvedImpsAllowed( 999 )
+	Implementations
+	(
+		Implementation
+		(
+			Name ( "VMCEPC: x86" )
+			GUID ( {5914C276-B699-43A0-BB0F-CF05BC8671D1} )
+			Description ( "A BSP for a Windows CE PC-based hardware reference platform.  The platform uses the OS based on the x86 architecture emulated by VMWARE." )
+			BSPPlatformDir ( "VMCEPC" )
+			Version ( "5.0.0.0" )
+			Locale ( 0409 )
+			Vendor ( "Sting FENG" )
+			Date ( "2004-3-12" )
+			Children ( "{EA6592CB-F08E-4F3A-84EF-8C9CE66BAFC7}" )
+			Children ( "{FFD3CE07-3CFA-43B6-8832-435AA88337DF}" )
+			SizeIsCPUDependent( 1 )
+			CPUSizeMultiplier( 1.0 )
+			BuildMethods
+			(
+				BuildMethod
+				(
+					GUID ( {148049A3-BC04-450F-ADFB-A5D57658FBD7} )
+					Step ( BSP )
+					CPU ( "x86" )
+				)
+			)
+		)
+	)
+)
+ComponentType
+(
+	Name ( "Ethernet Bootloader (eboot)" )
+	GUID ( {EA6592CB-F08E-4F3A-84EF-8C9CE66BAFC7} )
+	Description ( "Ethernet Bootloader (eboot)" )
+	Vendor ( "Microsoft" )
+	MaxResolvedImpsAllowed( 1 )
+	Implementations
+	(
+		Implementation
+		(
+			Name ( "Ethernet Bootloader (eboot)" )
+			GUID ( {1D37B8F6-BFD0-4553-957E-FFE6526D3A5B} )
+			Description ( "Ethernet Bootloader (eboot)" )
+			BSPPlatformDir ( "VMCEPC" )
+			Version ( "5.0.0.0" )
+			Locale ( 0409 )
+			Vendor ( "Infocean" )
+			Date ( "2004-3-12" )
+			SizeIsCPUDependent( 1 )
+			BuildMethods
+			(
+				BuildMethod
+				(
+					GUID ( {56182CDD-7F03-411F-A317-D7BA1884ED61} )
+					Step ( BSP )
+					CPU ( "x86" )
+					Action ( '#SRCCODE(SOURCES, "$(_WINCEROOT)\PLATFORM\VMCEPC\SRC\BOOTLOADER\EBOOT")' )
+				)
+			)
+		)
+	)
+)
+ComponentType
+(
+	Name ( "Serial Bootloader (sboot)" )
+	GUID ( {FFD3CE07-3CFA-43B6-8832-435AA88337DF} )
+	Description ( "Serial Bootloader (sboot)" )
+	Vendor ( "Microsoft" )
+	MaxResolvedImpsAllowed( 1 )
+	Implementations
+	(
+		Implementation
+		(
+			Name ( "Serial Bootloader (sboot)" )
+			GUID ( {779A4E47-C01C-4CF2-A745-B02B2CB5E4F6} )
+			Description ( "Serial Bootloader (sboot)" )
+			BSPPlatformDir ( "VMCEPC" )
+			Version ( "5.0.0.0" )
+			Locale ( 0409 )
+			Vendor ( "Infocean" )
+			Date ( "2004-3-12" )
+			SizeIsCPUDependent( 1 )
+			BuildMethods
+			(
+				BuildMethod
+				(
+					GUID ( {C243D56F-F36C-4B46-9428-D61209100AF6} )
+					Step ( BSP )
+					CPU ( "x86" )
+					Action ( '#SRCCODE(SOURCES, "$(_WINCEROOT)\PLATFORM\VMCEPC\SRC\BOOTLOADER\SBOOT")' )
+				)
+			)
+		)
+	)
+)

@@ -1,0 +1,66 @@
+!if 0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+!endif
+!if 0
+Use of this source code is subject to the terms of the Microsoft end-user
+license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+If you did not accept the terms of the EULA, you are not authorized to use
+this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+install media.
+!endif
+!IF 0
+
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+SYNCHRONIZE_DRAIN=1
+TARGETNAME=EBOOT
+TARGETTYPE=PROGRAM
+WINCECPU=1
+RELEASETYPE=PLATFORM
+EXEENTRY=StartUp
+INCLUDES= \
+	     $(_PUBLICROOT)\common\oak\drivers\block\msflashfmd\inc; \
+	     $(_PUBLICROOT)\common\oak\drivers\ethdbg\bootpart;      \
+	     $(INCLUDES)
+
+WINCETARGETFILES=RomImage        
+
+LDEFINES=-subsystem:native /DEBUG /DEBUGTYPE:CV /FIXED:NO
+CDEFINES= $(CDEFINES) -DCOREDLL -DDRAW_PROGRESS_BAR=0
+
+TARGETLIBS=$(_COMMONOAKROOT)\lib\$(_CPUINDPATH)\fulllibc.lib    \
+           $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_blcommon.lib    \
+           $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_blnk.lib        \
+           $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_rtc_x86.lib     \
+           $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_io_x86.lib      \
+           $(_TARGETPLATROOT)\lib\$(_CPUDEPPATH)\oal_kitl_x86.lib     \
+           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ne2kdbg.lib     \
+           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\rtl8139dbg.lib  \
+           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\dp83815dbg.lib  \
+           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\3c90xdbg.lib    \
+#           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\am79c970dbg.lib    \
+#           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\am79c973dbg.lib    \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\net2890klib.lib \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ddk_io.lib      \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\rne_mdd.lib     \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\sdnpcik.lib     \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ecclib.lib      \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\bootpart.lib    \
+	       $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\eboot.lib
+
+SOURCES=main.c      \
+	debug.c     \
+	pciconfig.c \
+	flash.c	    \
+	oeminit.asm 

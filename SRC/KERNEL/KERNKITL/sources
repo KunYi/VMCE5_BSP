@@ -1,0 +1,55 @@
+!if 0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+!endif
+!if 0
+Use of this source code is subject to the terms of the Microsoft end-user
+license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+If you did not accept the terms of the EULA, you are not authorized to use
+this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+install media.
+!endif
+
+SYNCHRONIZE_DRAIN=1
+RELEASETYPE=PLATFORM
+EXEENTRY=StartUp
+EXEBASE=0x80200000
+TARGETTYPE=PROGRAM
+TARGETNAME=kernkitl
+
+TARGETLIBS =    \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\nk.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\kitl.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ddk_io.lib \
+    $(_TARGETPLATROOT)\lib\$(_CPUINDPATH)\oal.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUINDPATH)\PCIreg.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_startup_x86.lib \
+#    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_intr_x86.lib \
+#    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_power_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_rtc_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_timer_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_qpc_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_memory_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_other_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_ioctl_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_io_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_kitl_x86.lib \
+    $(_PLATCOMMONLIB)\$(_CPUDEPPATH)\oal_intr.lib \
+    $(_PLATCOMMONLIB)\$(_CPUDEPPATH)\oal_ioctl.lib \
+    $(_PLATCOMMONLIB)\$(_CPUDEPPATH)\oal_log.lib \
+    $(_PLATCOMMONLIB)\$(_CPUDEPPATH)\oal_other.lib \
+    $(_PLATCOMMONLIB)\$(_CPUDEPPATH)\oal_cache.lib \
+    $(_PLATCOMMONLIB)\$(_CPUDEPPATH)\oal_kitl.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\rtl8139dbg.lib  \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ne2kdbg.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\dp83815dbg.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ne2kdbg.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\3c90xdbg.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\rne_mdd.lib  \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\net2890klib.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\vbridge.lib  \
+    $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\loadauth.lib \
+    $(_COMMONOAKROOT)\lib\$(_CPUINDPATH)\fulllibc.lib
+
+LDEFINES=-subsystem:native /DEBUG /DEBUGTYPE:CV /FIXED:NO
+
+SOURCES=

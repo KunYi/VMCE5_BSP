@@ -1,0 +1,97 @@
+;
+; Copyright (c) Microsoft Corporation.  All rights reserved.
+;
+;
+; Use of this source code is subject to the terms of the Microsoft end-user
+; license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+; If you did not accept the terms of the EULA, you are not authorized to use
+; this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+; install media.
+;
+MEMORY
+
+	#if defined IMGRAM16
+           ; 16 MB of RAM (note: AUTOSIZE will adjust boundary)
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  00400000  RAM
+	#elif defined IMGRAM32
+	   ; 32 MB of RAM (note: AUTOSIZE will adjust boundary)
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  01400000  RAM
+	#elif defined IMGRAM64
+	   ; 64 MB of RAM (note: AUTOSIZE will adjust boundary)
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  03400000  RAM
+	#elif defined IMGRAM128
+	   ; 128 MB of RAM (note: AUTOSIZE will adjust boundary)
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  07100000  RAM
+	#elif defined IMGRAM256
+	   ; 256 MB of RAM (note: AUTOSIZE will adjust boundary)
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  0EB00000  RAM
+	#elif defined IMGRAM512
+	   ; 512 MB of RAM (note: AUTOSIZE will adjust boundary)
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  1E000000  RAM
+	#else
+	   ; 28 MB of RAM (default) (note: AUTOSIZE will adjust boundary)
+	   ; This value will cause the RAM auto-detect feature to trigger
+	   NK       80220000  009E0000  RAMIMAGE
+	   RAM      80C00000  01000000  RAM
+	#endif
+
+; Hard reset the system on a software reboot?
+;
+IF BSP_HARDRESET
+    pdwHardReset        00000000        1       FIXUPVAR
+ELSE
+    pdwHardReset        00000000        0       FIXUPVAR
+ENDIF
+
+   BOOTARGS  801FFF00  00000100  RESERVED   ; Boot arguments
+   EDBG_DMA  80200000  00020000  RESERVED	; EDBG DMA buffer
+
+CONFIG
+   AUTOSIZE=ON
+
+; @CESYSGEN IF !NK_NKNOCOMP
+   COMPRESSION=ON
+; @CESYSGEN ENDIF !NK_NKNOCOMP
+; @CESYSGEN IF NK_NKNOCOMP
+   COMPRESSION=OFF
+; @CESYSGEN ENDIF NK_NKNOCOMP
+
+IF IMGPROFILER   
+   PROFILE=ON
+ELSE
+   PROFILE=OFF
+ENDIF
+
+   KERNELFIXUPS=ON
+
+;
+; ROMFLAGS is a bitmask of options for the kernel
+;	ROMFLAGS	0x0001	Disallow Paging
+;	ROMFLAGS	0x0002	Not all KMode
+;   ROMFLAGS    0x0010  Trust Module only
+;
+IF IMGTRUSTROMONLY
+    IF IMGNOTALLKMODE
+       ROMFLAGS=12
+    ELSE
+       ROMFLAGS=10
+    ENDIF
+ELSE
+    IF IMGNOTALLKMODE
+       ROMFLAGS=2
+    ELSE
+       ROMFLAGS=0
+    ENDIF
+ENDIF
+
+
+IF _TGTCPUFAMILY=x86
+    ROMOFFSET=80000000
+ENDIF
+

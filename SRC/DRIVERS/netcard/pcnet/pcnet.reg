@@ -1,0 +1,63 @@
+[HKEY_LOCAL_MACHINE\Comm\PCNTN4M]
+	"DisplayName"="PCNTN4M Compatible Ethernet Driver"
+	"Group"="NDIS"
+	"ImagePath"="pcntn4m.dll"
+
+[HKEY_LOCAL_MACHINE\Comm\PCNTN4M\Linkage]
+	"Route"=multi_sz:"PCNTN4M1"
+
+[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1]
+	"DisplayName"="PCNTN4M Compatible Ethernet Driver"
+	"Group"="NDIS"
+	"ImagePath"="pcntn4m.dll"
+
+
+[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1\Parms]
+;	"BusNumber"=dword:0
+;	"BusType"=dword:05
+;	"Interrupt"=dword:05
+;	"IOAddress"=dword:0300
+
+
+[HKEY_LOCAL_MACHINE\Comm\Tcpip\Linkage] 
+	  "Bind"=multi_sz:"ppp","PCNTN4M1"
+
+	; Registry values for the pcntn4m1 driver
+[HKEY_LOCAL_MACHINE\Comm\PCNTN4M1\Parms\TcpIp]
+	; This enable the DHCP. In Win CE 2.1 Preview version statically allocated IP address 
+	   ; does not work. So we use the DHCP server to allocate the IP address. 
+	"EnableDHCP"=dword:1
+	; This should be MULTI_SZ
+	"DefaultGateway"=""
+	; This should be SZ... If null it means use LAN, else WAN and Interface.
+	"LLInterface"=""
+	; Use zero for broadcast address? (or 255.255.255.255)
+	"UseZeroBroadcast"=dword:0
+	; Thus should be MULTI_SZ, the IP address list
+	"IpAddress"="0.0.0.0"
+	; This should be MULTI_SZ, the subnet masks for the above IP addresses
+	"Subnetmask"="0.0.0.0"
+
+;
+; Template the PCI bus driver uses to match a AM79C970 PC-net card
+;
+[HKEY_LOCAL_MACHINE\Drivers\BuiltIn\PCI\Template\PCNTN4M]
+   "Dll"="NDIS.dll"
+   "Class"=dword:02
+   "SubClass"=dword:00
+   "ProgIF"=dword:0
+   "VendorID"=multi_sz:"1022"
+   "DeviceID"=multi_sz:"2000"
+;  "Entry"="NdisPCIBusDeviceInit"
+   "Prefix"="NDS"
+   "Transceiver"=dword:3
+   "IsrDll"="giisr.dll"
+   "IsrHandler"="ISRHandler"
+   "PortIsIO"=dword:1
+   "PortOffset"=dword:C		; TBD
+   "PortSize"=dword:2
+   "PortMask"=dword:5F00	; TBD
+
+[HKEY_LOCAL_MACHINE\Comm\ConnectionSharing]
+   "PrivateInterface"="PCI\\PCNTN4M"
+

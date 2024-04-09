@@ -1,0 +1,27 @@
+!if 0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+!endif
+!if 0
+Use of this source code is subject to the terms of the Microsoft end-user
+license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+If you did not accept the terms of the EULA, you are not authorized to use
+this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+install media.
+!endif
+WINCEOEM=1
+IMGNODFLTDDK=1
+WARNISERROR=1
+
+_COMMONPUBROOT=$(_PUBLICROOT)\common
+_PLATCOMMONLIB=$(_PLATFORMROOT)\common\lib
+
+_OEMINCPATH=$(_WINCEROOT)\public\common\sdk\inc
+_OEMINCPATH=$(_OEMINCPATH);$(_WINCEROOT)\public\common\oak\inc
+_OEMINCPATH=$(_OEMINCPATH);$(_WINCEROOT)\public\common\ddk\inc
+
+_ISVINCPATH=$(_WINCEROOT)\public\common\sdk\inc
+
+INCLUDES=$(_WINCEROOT)\public\common\oak\CSP\x86\inc
+INCLUDES=$(INCLUDES);$(_PLATFORMROOT)\common\src\x86\inc
+INCLUDES=$(INCLUDES);$(_PLATFORMROOT)\common\src\inc
+

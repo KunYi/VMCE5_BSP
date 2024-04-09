@@ -1,0 +1,47 @@
+!if 0
+Copyright (c) Microsoft Corporation.  All rights reserved.
+!endif
+!if 0
+Use of this source code is subject to the terms of the Microsoft end-user
+license agreement (EULA) under which you licensed this SOFTWARE PRODUCT.
+If you did not accept the terms of the EULA, you are not authorized to use
+this source code. For a copy of the EULA, please see the LICENSE.RTF on your
+install media.
+!endif
+!IF 0
+
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+SYNCHRONIZE_DRAIN=1
+TARGETNAME=SBOOT
+TARGETTYPE=PROGRAM
+WINCECPU=1
+RELEASETYPE=PLATFORM
+EXEENTRY=StartUp
+
+WINCETARGETFILES=RomImage
+
+LDEFINES=-subsystem:native /DEBUG /DEBUGTYPE:CV /FIXED:NO
+CDEFINES= $(CDEFINES) -DCOREDLL
+
+TARGETLIBS=$(_COMMONOAKROOT)\lib\$(_CPUINDPATH)\fulllibc.lib \
+           $(_PLATCOMMONLIB)\$(_CPUINDPATH)\oal_blcommon.lib \
+           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\ddk_io.lib   \
+           $(_COMMONOAKROOT)\lib\$(_CPUDEPPATH)\eboot.lib
+
+SOURCES= \
+	main.c    \
+	debug.c   \
+	oeminit.asm
+

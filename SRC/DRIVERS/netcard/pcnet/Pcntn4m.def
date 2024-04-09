@@ -1,0 +1,7 @@
+LIBRARY         PCNTN4M
+
+DESCRIPTION     'NDIS Miniport Driver for PCNet compatible Ethernet Adapters'
+
+EXPORTS         DriverEntry
+                Install_Driver
+             
